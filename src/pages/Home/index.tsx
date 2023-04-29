@@ -1,4 +1,4 @@
-import { Button, Col, Container, Row } from 'react-bootstrap';
+import { Button, Col, Container, Form, Row } from 'react-bootstrap';
 import {
   faArrowAltCircleRight,
   faCog,
@@ -7,9 +7,15 @@ import {
   faUpload,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import styled from 'styled-components';
+import { useRef, useState } from 'react';
+import { useFormik } from 'formik';
+import { toast, Id } from 'react-toastify';
 import InfoSquare from '../../shared/components/InfoSquare';
 import InitialScale from '../../shared/animations/InitialScale';
+import ConfigurationModal from '../../shared/components/ConfigurationModal';
+import { Configuration } from '../../shared/@types';
+import FileButton from '../../shared/components/FileButton';
+import ImageDragAndDrop from '../../shared/components/ImageDragAndDrop';
 
 interface HomePageProps {
   // eslint-disable-next-line react/require-default-props
@@ -17,11 +23,162 @@ interface HomePageProps {
 }
 
 function HomePage({ className }: HomePageProps) {
+  const [showConfigurationModal, setShowConfigurationModal] = useState(false);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  // eslint-disable-next-line no-unused-vars
+  const loadingToastRef = useRef<Id | undefined>();
+
+  const formInitialsValues: Configuration = {
+    algorithm: '',
+    colorChangeDelay: 3,
+    files: null,
+    moveDelay: 0,
+  };
+
+  const formik = useFormik({
+    initialValues: formInitialsValues,
+    onSubmit: (values) => {
+      console.log('enviado!');
+      try {
+        handleSubmitForm(values);
+      } catch (error) {
+        if (error instanceof Error) {
+          toast(error.message);
+        }
+      }
+    },
+    enableReinitialize: true,
+  });
+  // eslint-disable-next-line no-empty-pattern, no-unused-vars
+  const {
+    values,
+    handleChange,
+    setFieldValue,
+    handleReset,
+    handleSubmit,
+    touched,
+    errors,
+  } = formik;
+
+  const handleSubmitForm = async (formValues: Configuration) => {
+    if (!formValues.files) {
+      toast.error('É necessário enviar a imagem que iniciar a simulação.');
+      return;
+    }
+
+    const matrix = handleConvertImageToMatrix(formValues.files[0]);
+    toast.promise(matrix, {
+      pending: 'Convertendo imagem...',
+      error: 'Falha ao converter imagem',
+      success: 'Imagem convertida com sucesso!',
+    });
+
+    function delay(ms: number) {
+      // eslint-disable-next-line no-promise-executor-return
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    await delay(3000);
+
+    const matrixData = await matrix;
+
+    createJSONFile(
+      { image: matrixData },
+      values.files ? values.files[0].name.replace('.png', '') : 'File'
+    );
+
+    console.log(matrixData);
+  };
+
+  const handleConvertImageToMatrix = async (image: Blob) => {
+    const imageReader = new FileReader();
+    const matrix: number[][] = [];
+    imageReader.readAsDataURL(image);
+    imageReader.onload = () => {
+      const img = new Image();
+      img.src = imageReader.result?.toString() ?? '';
+
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx?.drawImage(img, 0, 0, img.width, img.height);
+
+        if (ctx) {
+          const pixelData = ctx.getImageData(0, 0, img.width, img.height).data;
+          const rows = img.height;
+          const cols = img.width;
+
+          // eslint-disable-next-line no-plusplus
+          for (let row = 0; row < rows; row++) {
+            matrix[row] = [];
+
+            // eslint-disable-next-line no-plusplus
+            for (let col = 0; col < cols; col++) {
+              const offset = (row * cols + col) * 4;
+
+              const r = pixelData[offset];
+              const g = pixelData[offset + 1];
+              const b = pixelData[offset + 2];
+              const a = pixelData[offset + 3];
+
+              // eslint-disable-next-line no-bitwise
+              const value = (a << 24) | (r << 16) | (g << 8) | b;
+
+              matrix[row][col] = value;
+            }
+          }
+        }
+      };
+    };
+    return matrix;
+  };
+
+  const createJSONFile = (
+    data: {
+      image: number[][];
+    },
+    fileName: string
+  ) => {
+    const jsonData = JSON.stringify(data); // Converte o objeto para uma string JSON
+    const blob = new Blob([jsonData], { type: 'application/json' }); // Cria um Blob com o conteúdo da string JSON
+    const url = URL.createObjectURL(blob); // Cria uma URL temporária para o Blob
+    const link = document.createElement('a'); // Cria um elemento <a> para fazer o download do arquivo
+    link.href = url; // Define a URL do elemento <a> como a URL temporária do Blob
+    link.download = `${fileName}.json`; // Define o nome do arquivo como "data.json"
+    document.body.appendChild(link); // Adiciona o elemento <a> ao corpo do documento
+    link.click(); // Clica no elemento <a> para iniciar o download do arquivo
+    document.body.removeChild(link); // Remove o elemento <a> do corpo do documento
+  };
+
+  const handleSetFile = (files: FileList | null) => {
+    if (
+      !files ||
+      (files[0].type !== 'image/png' && files[0].type !== 'image/jpg')
+    ) {
+      toast('Arquivo inválido!', { type: 'error' });
+      return;
+    }
+    console.log(files);
+    setFieldValue('files', files);
+  };
+
+  const handleCloseModal = () => {
+    handleReset(true);
+    setShowConfigurationModal(false);
+  };
+
   return (
     <Container
       className={className}
       fluid
-      style={{ backgroundColor: '#394867', height: '100vh', width: '100vw' }}
+      style={{
+        backgroundColor: '#394867',
+        height: '100vh',
+        width: '100vw',
+        position: 'static',
+      }}
     >
       <Row className="justify-content-center">
         <InitialScale delay={0}>
@@ -53,7 +210,6 @@ function HomePage({ className }: HomePageProps) {
               />
             </Row>
           </InitialScale>
-
           <InitialScale delay={0.2}>
             <Row className="col-auto align-items-center justify-content-center">
               <FontAwesomeIcon
@@ -102,47 +258,102 @@ function HomePage({ className }: HomePageProps) {
           </InitialScale>
         </Row>
         <Row className="mt-5 justify-content-center">
-          <Row className="col-auto">
-            <Button
-              variant="none"
-              className="buttonWhite "
-              style={{ border: '1px solid white' }}
-            >
-              <Col className="d-flex flex-column align-items-center justify-content-center p-3">
-                <Row className="justify-content-center">
-                  <FontAwesomeIcon
-                    className="uploadImage"
-                    icon={faUpload}
-                    color="white"
-                    size="5x"
-                  />
-                </Row>
-                <Row
-                  className="mt-3 uploadText"
-                  style={{ textAlign: 'center' }}
-                >
-                  Envie a imagem que deseja simular a impressão.
-                </Row>
-              </Col>
-            </Button>
-          </Row>
+          <InitialScale delay={0.6}>
+            <Row className="col-auto">
+              <FileButton
+                onClick={() => setShowConfigurationModal(true)}
+                icon={faUpload}
+                text="Envie a imagem que deseja simular a impressão."
+                color="white"
+                hoverColor="#394867"
+                iconSize="5x"
+              />
+            </Row>
+          </InitialScale>
         </Row>
       </Row>
+      <ConfigurationModal
+        title="Configurações da simulação"
+        show={showConfigurationModal}
+        handleClose={handleCloseModal}
+      >
+        <Form onSubmit={handleSubmit}>
+          <Row className="noGutters title">
+            Selecione as configurações da simulação.
+          </Row>
+          <Row className="mt-3 justify-content-center">
+            <input
+              type="file"
+              hidden
+              onChange={(event) => handleSetFile(event.target.files)}
+              ref={inputRef}
+            />
+            <ImageDragAndDrop
+              onClick={() => inputRef.current?.click()}
+              files={values.files}
+            />
+          </Row>
+          <Row className="mt-3 justify-content-between">
+            <Row className="col-auto">
+              <InitialScale delay={0.2}>
+                <Form.Group>
+                  <Form.Label>Algoritmo</Form.Label>
+                  <Form.Select aria-label="Algoritmo">
+                    <option>Selecione o algoritmo</option>
+                    <option value="1">One</option>
+                    <option value="2">Two</option>
+                    <option value="3">Three</option>
+                  </Form.Select>
+                </Form.Group>
+              </InitialScale>
+            </Row>
+            <Row className="col-auto">
+              <InitialScale delay={0.2}>
+                <Form.Group>
+                  <Form.Label>Tempo de troca da cor</Form.Label>
+                  <Form.Control
+                    className="d-flex"
+                    type="number"
+                    placeholder="3 segundos"
+                    name="colorChangeDelay"
+                    onChange={handleChange}
+                    value={values.colorChangeDelay}
+                  />
+                  {touched.colorChangeDelay && errors.colorChangeDelay && (
+                    <Form.Text className="error">
+                      {errors.colorChangeDelay}
+                    </Form.Text>
+                  )}
+                </Form.Group>
+              </InitialScale>
+            </Row>
+            <Row className="col-auto">
+              <InitialScale delay={0.2}>
+                <Form.Group>
+                  <Form.Label>Tempo de movimento</Form.Label>
+                  <Form.Control
+                    className="d-flex"
+                    type="number"
+                    placeholder="1x"
+                  />
+                </Form.Group>
+              </InitialScale>
+            </Row>
+          </Row>
+          <Row className="mt-5 pt-3 justify-content-end border-top">
+            <InitialScale delay={0.3}>
+              <Button variant="danger" onClick={handleCloseModal}>
+                Cancelar
+              </Button>
+            </InitialScale>
+            <InitialScale delay={0.3}>
+              <Button type="submit">Iniciar Simulação</Button>
+            </InitialScale>
+          </Row>
+        </Form>
+      </ConfigurationModal>
     </Container>
   );
 }
 
-export default styled(HomePage)`
-  .buttonWhite {
-    color: white;
-    :hover {
-      background-color: white;
-      .uploadImage {
-        color: #394867;
-      }
-      .uploadText {
-        color: #394867;
-      }
-    }
-  }
-`;
+export default HomePage;
