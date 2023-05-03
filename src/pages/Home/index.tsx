@@ -16,6 +16,7 @@ import ConfigurationModal from '../../shared/components/ConfigurationModal';
 import { Configuration } from '../../shared/@types';
 import FileButton from '../../shared/components/FileButton';
 import ImageDragAndDrop from '../../shared/components/ImageDragAndDrop';
+import { reduceImageColors } from '../../utils/colorReduce';
 
 interface HomePageProps {
   // eslint-disable-next-line react/require-default-props
@@ -62,7 +63,7 @@ function HomePage({ className }: HomePageProps) {
 
   const handleSubmitForm = async (formValues: Configuration) => {
     if (!formValues.files) {
-      toast.error('É necessário enviar a imagem que iniciar a simulação.');
+      toast.error('É necessário enviar a imagem para iniciar a simulação.');
       return;
     }
 
@@ -82,10 +83,7 @@ function HomePage({ className }: HomePageProps) {
 
     const matrixData = await matrix;
 
-    createJSONFile(
-      { image: matrixData },
-      values.files ? values.files[0].name.replace('.png', '') : 'File'
-    );
+    downloadImageFromMatrix(await matrix);
 
     console.log(matrixData);
   };
@@ -106,7 +104,8 @@ function HomePage({ className }: HomePageProps) {
         ctx?.drawImage(img, 0, 0, img.width, img.height);
 
         if (ctx) {
-          const pixelData = ctx.getImageData(0, 0, img.width, img.height).data;
+          const imageData = ctx.getImageData(0, 0, img.width, img.height);
+          const pixelData = reduceImageColors(imageData).newImageData.data;
           const rows = img.height;
           const cols = img.width;
 
@@ -135,22 +134,47 @@ function HomePage({ className }: HomePageProps) {
     return matrix;
   };
 
-  const createJSONFile = (
-    data: {
-      image: number[][];
-    },
-    fileName: string
-  ) => {
-    const jsonData = JSON.stringify(data); // Converte o objeto para uma string JSON
-    const blob = new Blob([jsonData], { type: 'application/json' }); // Cria um Blob com o conteúdo da string JSON
-    const url = URL.createObjectURL(blob); // Cria uma URL temporária para o Blob
-    const link = document.createElement('a'); // Cria um elemento <a> para fazer o download do arquivo
-    link.href = url; // Define a URL do elemento <a> como a URL temporária do Blob
-    link.download = `${fileName}.json`; // Define o nome do arquivo como "data.json"
-    document.body.appendChild(link); // Adiciona o elemento <a> ao corpo do documento
-    link.click(); // Clica no elemento <a> para iniciar o download do arquivo
-    document.body.removeChild(link); // Remove o elemento <a> do corpo do documento
-  };
+  function downloadImageFromMatrix(matrix: number[][]) {
+    const rows = matrix.length;
+    const cols = matrix[0].length;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = cols;
+    canvas.height = rows;
+
+    const ctx = canvas.getContext('2d');
+
+    // eslint-disable-next-line no-plusplus
+    for (let row = 0; row < rows; row++) {
+      // eslint-disable-next-line no-plusplus
+      for (let col = 0; col < cols; col++) {
+        const value = matrix[row][col];
+
+        // eslint-disable-next-line no-bitwise
+        const r = (value >> 16) & 0xff;
+        // eslint-disable-next-line no-bitwise
+        const g = (value >> 8) & 0xff;
+        // eslint-disable-next-line no-bitwise
+        const b = value & 0xff;
+        // eslint-disable-next-line no-bitwise
+        const a = (value >> 24) & 0xff;
+
+        if (ctx) {
+          ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${a / 255})`;
+          ctx.fillRect(col, row, 1, 1);
+        }
+      }
+    }
+
+    const dataURL = canvas.toDataURL('image/png');
+
+    const link = document.createElement('a');
+    link.download = 'image.png';
+    link.href = dataURL;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
 
   const handleSetFile = (files: FileList | null) => {
     if (
@@ -182,7 +206,10 @@ function HomePage({ className }: HomePageProps) {
     >
       <Row className="justify-content-center">
         <InitialScale delay={0}>
-          <Col className="mt-3 d-flex flex-column col-auto align-items-center">
+          <Col
+            className="mt-3 d-flex flex-column align-items-center"
+            style={{ width: '100vw' }}
+          >
             <h1 style={{ fontSize: '50px', color: 'white' }}>
               RoboticArmPrinter
             </h1>

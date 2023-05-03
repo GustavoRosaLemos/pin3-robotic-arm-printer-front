@@ -14,7 +14,7 @@ const root = createRoot(container);
 root.render(
   <React.StrictMode>
     <ToastContainer
-      position="bottom-left"
+      position="top-left"
       autoClose={5000}
       hideProgressBar={false}
       newestOnTop={false}
