@@ -10,6 +10,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useRef, useState } from 'react';
 import { useFormik } from 'formik';
 import { toast, Id } from 'react-toastify';
+import { useNavigate } from 'react-router';
 import InfoSquare from '../../shared/components/InfoSquare';
 import InitialScale from '../../shared/animations/InitialScale';
 import ConfigurationModal from '../../shared/components/ConfigurationModal';
@@ -17,6 +18,8 @@ import { Configuration } from '../../shared/@types';
 import FileButton from '../../shared/components/FileButton';
 import ImageDragAndDrop from '../../shared/components/ImageDragAndDrop';
 import { reduceImageColors } from '../../utils/colorReduce';
+import { useGetMatrixData } from '../../store/hooks/renderHooks';
+import { delay } from '../../utils';
 
 interface HomePageProps {
   // eslint-disable-next-line react/require-default-props
@@ -25,8 +28,9 @@ interface HomePageProps {
 
 function HomePage({ className }: HomePageProps) {
   const [showConfigurationModal, setShowConfigurationModal] = useState(false);
+  const getMatrix = useGetMatrixData();
+  const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement | null>(null);
-  // eslint-disable-next-line no-unused-vars
   const loadingToastRef = useRef<Id | undefined>();
 
   const formInitialsValues: Configuration = {
@@ -39,7 +43,6 @@ function HomePage({ className }: HomePageProps) {
   const formik = useFormik({
     initialValues: formInitialsValues,
     onSubmit: (values) => {
-      console.log('enviado!');
       try {
         handleSubmitForm(values);
       } catch (error) {
@@ -67,25 +70,30 @@ function HomePage({ className }: HomePageProps) {
       return;
     }
 
-    const matrix = handleConvertImageToMatrix(formValues.files[0]);
-    toast.promise(matrix, {
-      pending: 'Convertendo imagem...',
-      error: 'Falha ao converter imagem',
-      success: 'Imagem convertida com sucesso!',
-    });
+    loadingToastRef.current = toast.loading('Convertendo a imagem...');
 
-    function delay(ms: number) {
-      // eslint-disable-next-line no-promise-executor-return
-      return new Promise((resolve) => setTimeout(resolve, ms));
+    try {
+      const { algorithm, colorChangeDelay, moveDelay } = values;
+      const matrix = await handleConvertImageToMatrix(formValues.files[0]);
+      await delay(1000);
+      getMatrix({ matrix, algorithm, colorChangeDelay, moveDelay });
+      toast.update(loadingToastRef.current, {
+        render: 'Imagem convertida com sucesso!',
+        type: 'success',
+        isLoading: false,
+        autoClose: 5000,
+        closeButton: true,
+      });
+      navigate('/render');
+    } catch (error) {
+      toast.update(loadingToastRef.current, {
+        render: 'Falha ao converter imagem!',
+        type: 'error',
+        isLoading: false,
+        autoClose: 5000,
+        closeButton: true,
+      });
     }
-
-    await delay(3000);
-
-    const matrixData = await matrix;
-
-    downloadImageFromMatrix(await matrix);
-
-    console.log(matrixData);
   };
 
   const handleConvertImageToMatrix = async (image: Blob) => {
@@ -134,6 +142,7 @@ function HomePage({ className }: HomePageProps) {
     return matrix;
   };
 
+  // eslint-disable-next-line no-unused-vars
   function downloadImageFromMatrix(matrix: number[][]) {
     const rows = matrix.length;
     const cols = matrix[0].length;
@@ -184,7 +193,6 @@ function HomePage({ className }: HomePageProps) {
       toast('Arquivo inválido!', { type: 'error' });
       return;
     }
-    console.log(files);
     setFieldValue('files', files);
   };
 
@@ -202,6 +210,7 @@ function HomePage({ className }: HomePageProps) {
         height: '100vh',
         width: '100vw',
         position: 'static',
+        overflow: 'hidden',
       }}
     >
       <Row className="justify-content-center">
