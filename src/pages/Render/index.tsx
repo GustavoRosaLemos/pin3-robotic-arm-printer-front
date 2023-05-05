@@ -102,7 +102,12 @@ function RenderPage() {
     <Container
       className="noGutters pb-5 d-flex align-item-center justify-content-center"
       fluid
-      style={{ width: '100vw', height: '100vh', backgroundColor: 'grey' }}
+      style={{
+        width: '100vw',
+        height: '100vh',
+        backgroundColor: 'grey',
+        overflow: 'hidden',
+      }}
     >
       <Render>
         <canvas ref={canvasRef} />

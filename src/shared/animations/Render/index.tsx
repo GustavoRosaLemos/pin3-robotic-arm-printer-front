@@ -8,8 +8,8 @@ interface RenderProps {
 function Render({ children }: RenderProps) {
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
+      initial={{ y: -1000 }}
+      animate={{ y: 0 }}
       transition={{ duration: 5 }}
       style={{
         display: 'flex',
