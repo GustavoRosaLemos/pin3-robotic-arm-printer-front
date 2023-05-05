@@ -2,13 +2,10 @@ import { MatrixData } from '../../shared/@types';
 import { requestService } from '../../utils/requestService';
 
 export const requestPostRenderImage = async (matrix: MatrixData) => {
-  const url = '';
-  const body = {
-    image: matrix,
-  };
+  const url = 'http://127.0.0.1:8080/print';
   const headers = {
     'content-type': 'application/json',
   };
 
-  return requestService(url, body, headers, false, 'POST');
+  return requestService(url, matrix, headers, false, 'POST');
 };

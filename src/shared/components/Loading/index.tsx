@@ -12,6 +12,7 @@ function Loading() {
         height: '100vh',
         position: 'absolute',
         overflow: 'hidden',
+        backgroundColor: 'grey',
       }}
     >
       <ReactLoading type="spin" color="#394867" height="5%" width="5%" />

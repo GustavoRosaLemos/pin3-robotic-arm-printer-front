@@ -34,10 +34,10 @@ function HomePage({ className }: HomePageProps) {
   const loadingToastRef = useRef<Id | undefined>();
 
   const formInitialsValues: Configuration = {
-    algorithm: '',
+    algorithm: '1',
     colorChangeDelay: 3,
     files: null,
-    moveDelay: 0,
+    moveDelay: 5,
   };
 
   const formik = useFormik({
@@ -76,7 +76,12 @@ function HomePage({ className }: HomePageProps) {
       const { algorithm, colorChangeDelay, moveDelay } = values;
       const matrix = await handleConvertImageToMatrix(formValues.files[0]);
       await delay(1000);
-      getMatrix({ matrix, algorithm, colorChangeDelay, moveDelay });
+      getMatrix({
+        matrix,
+        algorithm,
+        timeChange: colorChangeDelay,
+        timeMove: moveDelay,
+      });
       toast.update(loadingToastRef.current, {
         render: 'Imagem convertida com sucesso!',
         type: 'success',
@@ -334,11 +339,14 @@ function HomePage({ className }: HomePageProps) {
               <InitialScale delay={0.2}>
                 <Form.Group>
                   <Form.Label>Algoritmo</Form.Label>
-                  <Form.Select aria-label="Algoritmo">
+                  <Form.Select
+                    value={values.algorithm}
+                    name="algorithm"
+                    onChange={handleChange}
+                    aria-label="Algoritmo"
+                  >
                     <option>Selecione o algoritmo</option>
-                    <option value="1">One</option>
-                    <option value="2">Two</option>
-                    <option value="3">Three</option>
+                    <option value="1">Principal</option>
                   </Form.Select>
                 </Form.Group>
               </InitialScale>
@@ -350,7 +358,6 @@ function HomePage({ className }: HomePageProps) {
                   <Form.Control
                     className="d-flex"
                     type="number"
-                    placeholder="3 segundos"
                     name="colorChangeDelay"
                     onChange={handleChange}
                     value={values.colorChangeDelay}
@@ -370,7 +377,9 @@ function HomePage({ className }: HomePageProps) {
                   <Form.Control
                     className="d-flex"
                     type="number"
-                    placeholder="1x"
+                    name="moveDelay"
+                    onChange={handleChange}
+                    value={values.moveDelay}
                   />
                 </Form.Group>
               </InitialScale>

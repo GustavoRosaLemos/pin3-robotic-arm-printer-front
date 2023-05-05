@@ -6,7 +6,7 @@ export interface Configuration {
 }
 
 export interface ImageData {
-  image: number[][];
+  matrix: number[][];
   time: number;
   moves: number;
   colorChanges: number;
@@ -17,6 +17,6 @@ export interface ImageData {
 export interface MatrixData {
   matrix: number[][];
   algorithm: string;
-  colorChangeDelay: number;
-  moveDelay: number;
+  timeChange: number;
+  timeMove: number;
 }

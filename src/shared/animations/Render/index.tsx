@@ -11,7 +11,10 @@ function Render({ children }: RenderProps) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 5 }}
-      style={{ display: 'flex', backgroundColor: 'gray' }}
+      style={{
+        display: 'flex',
+        backgroundColor: 'gray',
+      }}
     >
       {children}
     </motion.div>

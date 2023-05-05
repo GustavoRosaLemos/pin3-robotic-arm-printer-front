@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router';
-import { Container } from 'react-bootstrap';
+import { Button, Col, Container, ProgressBar, Row } from 'react-bootstrap';
 import {
   useGetImage,
   useImage,
@@ -17,7 +17,6 @@ import Render from '../../shared/animations/Render';
 
 function RenderPage() {
   const isLoading = useLoading();
-  // eslint-disable-next-line no-unused-vars
   const image = useImage();
   const matrixData = useMatrixData();
   const showLoading = useShowLoading();
@@ -40,7 +39,7 @@ function RenderPage() {
           if (error instanceof Error) {
             toast.error(error.message);
           }
-          // navigate('/');
+          navigate('/');
         } finally {
           hideLoading();
         }
@@ -50,10 +49,10 @@ function RenderPage() {
   }, []);
 
   useEffect(() => {
-    if (matrixData && matrixData.matrix) {
-      renderImageFromMatrix(matrixData?.matrix);
+    if (image && image.matrix) {
+      renderImageFromMatrix(image.matrix);
     }
-  }, [matrixData, canvasRef.current]);
+  }, [image, canvasRef.current]);
 
   function renderImageFromMatrix(matrix: number[][]) {
     const rows = matrix.length;
@@ -90,19 +89,61 @@ function RenderPage() {
     }
   }
 
+  const handleCancelSimulation = () => {
+    toast.success('Simulação cancelada com sucesso!');
+    navigate('/');
+  };
+
   if (isLoading) {
     return <Loading />;
   }
 
   return (
     <Container
-      className="d-flex alig-item-center justify-content-center"
+      className="noGutters pb-5 d-flex align-item-center justify-content-center"
       fluid
-      style={{ width: '100vw', height: '100vh' }}
+      style={{ width: '100vw', height: '100vh', backgroundColor: 'grey' }}
     >
       <Render>
         <canvas ref={canvasRef} />
       </Render>
+      <Row
+        className="d-flex align-items-center justify-content-around"
+        style={{
+          position: 'absolute',
+          zIndex: '1',
+          bottom: '0',
+          width: '100vw',
+          height: '60px',
+        }}
+      >
+        <Col className="col-auto">
+          <Button variant="danger" onClick={handleCancelSimulation}>
+            Cancelar Simulação
+          </Button>
+        </Col>
+        {image && (
+          <>
+            <Col className="col-auto" style={{ color: 'white' }}>
+              Movimentos: {image?.moves}
+            </Col>
+            <Col className="col-auto" style={{ color: 'white' }}>
+              Mudanças de cor: {image?.colorChanges}
+            </Col>
+          </>
+        )}
+        <Col className="d-flex mr-3 justify-content-end">
+          {image && image?.time && (
+            <ProgressBar
+              className="noGutters"
+              animated
+              now={100}
+              label={`Tempo estimado ${image.time} segundos...`}
+              style={{ height: '33px', width: '900px' }}
+            />
+          )}
+        </Col>
+      </Row>
     </Container>
   );
 }
