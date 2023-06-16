@@ -10,8 +10,8 @@ export const resizeFile = (image: Blob) =>
   new Promise((resolve) => {
     Resizer.imageFileResizer(
       image,
-      120,
-      120,
+      100,
+      100,
       'PNG',
       100,
       0,
