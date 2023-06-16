@@ -7,7 +7,7 @@ declare module 'axios' {
 }
 
 axios.interceptors.request.use((config) => {
-  config.timeout = 10000;
+  config.timeout = 1800000;
   config.timeoutErrorMessage = 'Request timed out';
   return config;
 });
