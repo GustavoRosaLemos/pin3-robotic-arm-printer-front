@@ -19,7 +19,8 @@ import FileButton from '../../shared/components/FileButton';
 import ImageDragAndDrop from '../../shared/components/ImageDragAndDrop';
 import { reduceImageColors } from '../../utils/colorReduce';
 import { useGetMatrixData } from '../../store/hooks/renderHooks';
-import { delay } from '../../utils';
+import { delay, resizeFile } from '../../utils';
+import { ALGORITHM } from '../../shared/constants';
 
 interface HomePageProps {
   // eslint-disable-next-line react/require-default-props
@@ -34,7 +35,7 @@ function HomePage({ className }: HomePageProps) {
   const loadingToastRef = useRef<Id | undefined>();
 
   const formInitialsValues: Configuration = {
-    algorithm: '1',
+    algorithm: 2,
     colorChangeDelay: 3,
     files: null,
     moveDelay: 5,
@@ -104,7 +105,7 @@ function HomePage({ className }: HomePageProps) {
   const handleConvertImageToMatrix = async (image: Blob) => {
     const imageReader = new FileReader();
     const matrix: number[][] = [];
-    imageReader.readAsDataURL(image);
+    imageReader.readAsDataURL((await resizeFile(image)) as Blob);
     imageReader.onload = () => {
       const img = new Image();
       img.src = imageReader.result?.toString() ?? '';
@@ -345,8 +346,14 @@ function HomePage({ className }: HomePageProps) {
                     onChange={handleChange}
                     aria-label="Algoritmo"
                   >
-                    <option>Selecione o algoritmo</option>
-                    <option value="1">Principal</option>
+                    <>
+                      <option>Selecione o algoritmo</option>
+                      {ALGORITHM.map((a) => (
+                        <option key={a.label} value={a.value}>
+                          {a.label}
+                        </option>
+                      ))}
+                    </>
                   </Form.Select>
                 </Form.Group>
               </InitialScale>

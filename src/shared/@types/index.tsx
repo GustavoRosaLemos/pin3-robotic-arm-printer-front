@@ -1,6 +1,6 @@
 export interface Configuration {
   files: FileList | null;
-  algorithm: string;
+  algorithm: number;
   colorChangeDelay: number;
   moveDelay: number;
 }
@@ -16,7 +16,7 @@ export interface ImageData {
 
 export interface MatrixData {
   matrix: number[][];
-  algorithm: string;
+  algorithm: number;
   timeChange: number;
   timeMove: number;
 }
