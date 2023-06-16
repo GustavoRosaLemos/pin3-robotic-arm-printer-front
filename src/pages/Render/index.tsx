@@ -55,12 +55,6 @@ function RenderPage() {
     }
   }, [image, canvasRef.current]);
 
-  useEffect(() => {
-    if (image && image.matrix) {
-      saveJSONInFile(image, 'Resultados');
-    }
-  }, [image]);
-
   function renderImageFromMatrix(matrix: number[][]) {
     const rows = matrix.length;
     const cols = matrix[0].length;
@@ -101,6 +95,13 @@ function RenderPage() {
     navigate('/');
   };
 
+  const handleSaveSimulation = () => {
+    if (image) {
+      saveJSONInFile(image, 'Resultados');
+      toast.success('Download dos resultados realizado com sucesso!');
+    }
+  };
+
   if (isLoading) {
     return <Loading />;
   }
@@ -131,30 +132,33 @@ function RenderPage() {
       >
         <Col className="col-auto">
           <Button variant="danger" onClick={handleCancelSimulation}>
-            Cancelar Simulação
+            Cancelar
           </Button>
         </Col>
         {image && (
           <>
+            <Col className="col-auto">
+              <Button variant="primary" onClick={handleSaveSimulation}>
+                Salvar
+              </Button>
+            </Col>
             <Col className="col-auto" style={{ color: 'white' }}>
               Tempo de movimento: {image?.timeMove}
             </Col>
             <Col className="col-auto" style={{ color: 'white' }}>
               tempo troca da cor: {image?.timeChange}
             </Col>
+            <Col className="d-flex mr-3 justify-content-end">
+              <ProgressBar
+                className="noGutters"
+                animated
+                now={100}
+                label={`Tempo estimado ${image.time} segundos...`}
+                style={{ height: '33px', width: '900px' }}
+              />
+            </Col>
           </>
         )}
-        <Col className="d-flex mr-3 justify-content-end">
-          {image && image?.time && (
-            <ProgressBar
-              className="noGutters"
-              animated
-              now={100}
-              label={`Tempo estimado ${image.time} segundos...`}
-              style={{ height: '33px', width: '900px' }}
-            />
-          )}
-        </Col>
       </Row>
     </Container>
   );
