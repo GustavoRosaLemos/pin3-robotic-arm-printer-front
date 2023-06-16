@@ -12,8 +12,8 @@ function Render({ children }: RenderProps) {
       animate={{ y: 0 }}
       transition={{ duration: 5 }}
       style={{
-        display: 'flex',
         backgroundColor: 'gray',
+        display: 'flex',
       }}
     >
       {children}

@@ -7,9 +7,8 @@ export interface Configuration {
 
 export interface ImageData {
   matrix: number[][];
+  matrixOrder: number[][];
   time: number;
-  moves: number;
-  colorChanges: number;
   timeMove: number;
   timeChange: number;
 }
