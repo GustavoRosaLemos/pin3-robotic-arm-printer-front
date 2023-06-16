@@ -14,6 +14,7 @@ import {
   useShowLoading,
 } from '../../store/hooks/loadingHooks';
 import Render from '../../shared/animations/Render';
+import { saveJSONInFile } from '../../utils';
 
 function RenderPage() {
   const isLoading = useLoading();
@@ -50,6 +51,7 @@ function RenderPage() {
 
   useEffect(() => {
     if (image && image.matrix) {
+      saveJSONInFile(image, 'Resultados');
       renderImageFromMatrix(image.matrix);
     }
   }, [image, canvasRef.current]);
@@ -130,10 +132,10 @@ function RenderPage() {
         {image && (
           <>
             <Col className="col-auto" style={{ color: 'white' }}>
-              Movimentos: {image?.moves}
+              Tempo de movimento: {image?.timeMove}
             </Col>
             <Col className="col-auto" style={{ color: 'white' }}>
-              Mudanças de cor: {image?.colorChanges}
+              tempo troca da cor: {image?.timeChange}
             </Col>
           </>
         )}
