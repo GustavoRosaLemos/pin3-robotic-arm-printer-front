@@ -35,7 +35,9 @@ function RenderPage() {
         navigate('/');
       } else {
         try {
-          await getImage(matrixData);
+          if (!image || matrixData.matrix !== image.matrix) {
+            await getImage(matrixData);
+          }
         } catch (error) {
           if (error instanceof Error) {
             toast.error(error.message);
