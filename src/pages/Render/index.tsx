@@ -52,9 +52,14 @@ function RenderPage() {
   useEffect(() => {
     if (image && image.matrix) {
       saveJSONInFile(image, 'Resultados');
-      renderImageFromMatrix(image.matrix);
     }
   }, [image, canvasRef.current]);
+
+  useEffect(() => {
+    if (image && image.matrix) {
+      renderImageFromMatrix(image.matrix);
+    }
+  }, [image]);
 
   function renderImageFromMatrix(matrix: number[][]) {
     const rows = matrix.length;
