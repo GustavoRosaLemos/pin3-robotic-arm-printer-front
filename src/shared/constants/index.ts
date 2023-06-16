@@ -9,6 +9,6 @@ export const ALGORITHM = [
   },
   {
     value: 3,
-    label: 'Nearest Insertion',
+    label: 'Cheapest Insertion',
   },
 ];
