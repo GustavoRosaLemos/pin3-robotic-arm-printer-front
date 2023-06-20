@@ -27,29 +27,24 @@ function RenderPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    const fetchImageData = async () => {
-      showLoading();
+    showLoading();
+
+    try {
       if (!matrixData) {
-        toast.error('Não foi possível localizar os dados da imagem!');
-        hideLoading();
-        navigate('/');
-      } else {
-        try {
-          if (!image || matrixData.matrix !== image.matrix) {
-            await getImage(matrixData);
-          }
-        } catch (error) {
-          if (error instanceof Error) {
-            toast.error(error.message);
-          }
-          navigate('/');
-        } finally {
-          hideLoading();
-        }
+        throw Error('Não foi possível localizar os dados da imagem.');
       }
-    };
-    fetchImageData();
-  }, []);
+      if (!image || matrixData.matrix !== image.matrix) {
+        getImage(matrixData);
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      }
+      navigate('/');
+    } finally {
+      hideLoading();
+    }
+  }, [getImage]);
 
   useEffect(() => {
     if (image && image.matrix) {

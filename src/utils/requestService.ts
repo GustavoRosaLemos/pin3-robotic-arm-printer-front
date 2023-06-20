@@ -5,7 +5,7 @@ export const requestService = async (
   body: unknown,
   headers: any,
   pureHeaders = false,
-  method: Method = 'GET'
+  method: Method = 'OPTIONS'
 ) => {
   const config: AxiosRequestConfig = {
     method,
