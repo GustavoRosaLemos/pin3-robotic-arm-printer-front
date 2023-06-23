@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router';
 import { Button, Col, Container, ProgressBar, Row } from 'react-bootstrap';
@@ -8,49 +8,44 @@ import {
   useMatrixData,
 } from '../../store/hooks/renderHooks';
 import Loading from '../../shared/components/Loading';
-import {
-  useHideLoading,
-  useLoading,
-  useShowLoading,
-} from '../../store/hooks/loadingHooks';
 import Render from '../../shared/animations/Render';
 import { formatRemainingTime, saveJSONInFile } from '../../utils';
 
 function RenderPage() {
-  const isLoading = useLoading();
+  const [isLoading, setIsLoading] = useState(false);
   const image = useImage();
   const matrixData = useMatrixData();
-  const showLoading = useShowLoading();
-  const hideLoading = useHideLoading();
   const getImage = useGetImage();
   const navigate = useNavigate();
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    showLoading();
-
-    try {
-      if (!matrixData) {
-        throw Error('Não foi possível localizar os dados da imagem.');
+    const fetchImage = async () => {
+      setIsLoading(true);
+      try {
+        if (!matrixData) {
+          throw Error('Não foi possível localizar os dados da imagem.');
+        }
+        if (!image || matrixData.matrix !== image.matrix) {
+          await getImage(matrixData);
+        }
+      } catch (error) {
+        if (error instanceof Error) {
+          toast.error(error.message);
+        }
+        navigate('/');
+      } finally {
+        setIsLoading(false);
       }
-      if (!image || matrixData.matrix !== image.matrix) {
-        getImage(matrixData);
-      }
-    } catch (error) {
-      if (error instanceof Error) {
-        toast.error(error.message);
-      }
-      navigate('/');
-    } finally {
-      hideLoading();
-    }
+    };
+    fetchImage();
   }, [getImage]);
 
   useEffect(() => {
-    if (image && image.matrix) {
+    if (image && image.matrix && !isLoading) {
       renderImageFromMatrix(image.matrix);
     }
-  }, [image, canvasRef.current]);
+  }, [image, canvasRef.current, isLoading]);
 
   function renderImageFromMatrix(matrix: number[][]) {
     const rows = matrix.length;
