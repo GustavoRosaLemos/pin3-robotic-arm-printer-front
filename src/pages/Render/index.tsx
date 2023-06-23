@@ -150,7 +150,7 @@ function RenderPage() {
                 className="noGutters"
                 animated
                 now={100}
-                label={`Tempo estimado ${image.time} segundos...`}
+                label={`Tempo estimado ${Math.round(image.time)} segundos...`}
                 style={{ height: '33px', width: '900px' }}
               />
             </Col>
