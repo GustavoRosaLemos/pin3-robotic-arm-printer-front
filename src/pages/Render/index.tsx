@@ -14,7 +14,7 @@ import {
   useShowLoading,
 } from '../../store/hooks/loadingHooks';
 import Render from '../../shared/animations/Render';
-import { saveJSONInFile } from '../../utils';
+import { formatRemainingTime, saveJSONInFile } from '../../utils';
 
 function RenderPage() {
   const isLoading = useLoading();
@@ -150,7 +150,7 @@ function RenderPage() {
                 className="noGutters"
                 animated
                 now={100}
-                label={`Tempo estimado ${Math.round(image.time)} segundos...`}
+                label={`Tempo estimado ${formatRemainingTime(image.time)}`}
                 style={{ height: '33px', width: '900px' }}
               />
             </Col>
