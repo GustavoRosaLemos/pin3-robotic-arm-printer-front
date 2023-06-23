@@ -45,7 +45,7 @@ export function formatRemainingTime(seconds: number): string {
     remainingTime += `${hours} hora(s) `;
   }
   if (minutes > 0) {
-    remainingTime += `${minutes} minutos(s) `;
+    remainingTime += `${minutes} minuto(s) `;
   }
 
   return remainingTime.trim();
