@@ -4,6 +4,7 @@ import HealthPage from '../pages/Health';
 import store from '../store';
 import HomePage from '../pages/Home';
 import RenderPage from '../pages/Render';
+import MultiRenderPage from '../pages/MultiRender';
 
 function RouterSwitch() {
   return (
@@ -12,6 +13,7 @@ function RouterSwitch() {
         <Route path="/" element={<HomePage />} />
         <Route path="/health" element={<HealthPage />} />
         <Route path="/render" element={<RenderPage />} />
+        <Route path="/multi-render" element={<MultiRenderPage />} />
       </Routes>
     </Provider>
   );
