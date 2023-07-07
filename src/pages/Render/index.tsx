@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router';
 import { Button, Col, Container, ProgressBar, Row } from 'react-bootstrap';
+import Background from '../../shared/images/background.png';
 import {
   useGetImage,
   useImage,
@@ -133,7 +134,10 @@ function RenderPage() {
       style={{
         width: '100vw',
         height: '100vh',
-        backgroundColor: 'grey',
+        backgroundImage: `url(${Background})`,
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: 'center',
+        backgroundSize: 'cover',
         overflow: 'hidden',
       }}
     >
