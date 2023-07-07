@@ -76,6 +76,7 @@ function MultiRenderPage() {
             className="m-3"
             style={{
               width: '18rem',
+              height: '10rem',
               boxShadow: 'rgba(149, 157, 165, 0.2) 0px 8px 24px',
               borderColor: 'none',
             }}
@@ -97,7 +98,7 @@ function MultiRenderPage() {
         </Col>
         {multipleImage && (
           <Col className="col-auto">
-            <Button variant="primary" onClick={handleSaveSimulation}>
+            <Button variant="success" onClick={handleSaveSimulation}>
               Salvar
             </Button>
           </Col>
