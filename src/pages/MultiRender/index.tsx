@@ -61,22 +61,32 @@ function MultiRenderPage() {
       style={{
         width: '100vw',
         height: '100vh',
-        overflow: 'hidden',
       }}
     >
       <Row className="m-3 title">Renderização Múltipla</Row>
-      <Row style={{ flex: '1' }} className="m-3">
+      <Row
+        style={{
+          flex: '1',
+        }}
+        className="m-3 d-flex justify-content-around"
+      >
         {multipleImage?.map((image) => (
-          <Col key={image.alg} className="p-3">
-            <Card style={{ width: '18rem' }}>
-              <Card.Title>{image.alg}</Card.Title>
-              <Card.Body>
-                <Row>Tempo de movimento: {image.timeMove}</Row>
-                <Row>tempo troca da cor: {image.timeChange}</Row>
-                <Row>tempo estimado: {formatRemainingTime(image.time)}</Row>
-              </Card.Body>
-            </Card>
-          </Col>
+          <Card
+            key={image.alg}
+            className="m-3"
+            style={{
+              width: '18rem',
+              boxShadow: 'rgba(149, 157, 165, 0.2) 0px 8px 24px',
+              borderColor: 'none',
+            }}
+          >
+            <Card.Title className="mt-2">{image.alg}</Card.Title>
+            <Card.Body>
+              <Row>Tempo de movimento: {image.timeMove}</Row>
+              <Row>tempo troca da cor: {image.timeChange}</Row>
+              <Row>tempo estimado: {formatRemainingTime(image.time)}</Row>
+            </Card.Body>
+          </Card>
         ))}
       </Row>
       <Row className="m-3">
