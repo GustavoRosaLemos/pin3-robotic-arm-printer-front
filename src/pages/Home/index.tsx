@@ -323,7 +323,7 @@ function HomePage({ className }: HomePageProps) {
                 height="124px"
                 image={faPaintBrush}
                 color="#394867"
-                text="Acompanhe a simulação da impressão em tempo real."
+                text="Acompanhe a simulação da impressão."
               />
             </Row>
           </InitialScale>
