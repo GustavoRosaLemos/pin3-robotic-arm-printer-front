@@ -6,12 +6,12 @@ export function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export const resizeFile = (image: Blob) =>
+export const resizeFile = (image: Blob, maxSize: number) =>
   new Promise((resolve) => {
     Resizer.imageFileResizer(
       image,
-      100,
-      100,
+      maxSize,
+      maxSize,
       'PNG',
       100,
       0,

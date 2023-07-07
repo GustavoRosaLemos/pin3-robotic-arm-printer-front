@@ -11,10 +11,12 @@ import { useRef, useState } from 'react';
 import { useFormik } from 'formik';
 import { toast, Id } from 'react-toastify';
 import { useNavigate } from 'react-router';
+import Select from 'react-select';
+import { object, array, number } from 'yup';
 import InfoSquare from '../../shared/components/InfoSquare';
 import InitialScale from '../../shared/animations/InitialScale';
 import ConfigurationModal from '../../shared/components/ConfigurationModal';
-import { Configuration } from '../../shared/@types';
+import { Configuration, Options } from '../../shared/@types';
 import FileButton from '../../shared/components/FileButton';
 import ImageDragAndDrop from '../../shared/components/ImageDragAndDrop';
 import { reduceImageColors } from '../../utils/colorReduce';
@@ -35,10 +37,12 @@ function HomePage({ className }: HomePageProps) {
   const loadingToastRef = useRef<Id | undefined>();
 
   const formInitialsValues: Configuration = {
-    algorithm: 2,
+    algorithm: ['2'],
     colorChangeDelay: 3,
     files: null,
     moveDelay: 5,
+    imageMaxSize: 100,
+    renderQuantity: 1,
   };
 
   const formik = useFormik({
@@ -53,6 +57,23 @@ function HomePage({ className }: HomePageProps) {
       }
     },
     enableReinitialize: true,
+    validationSchema: object().shape({
+      algorithm: array()
+        .required('Campo obrigatório.')
+        .min(1, 'Selecione um algoritmo'),
+      colorChangeDelay: number()
+        .required('Campo obrigatório.')
+        .min(0.1, 'Deve ser maior que 0.1'),
+      moveDelay: number()
+        .required('Campo obrigatório.')
+        .min(0.1, 'Deve ser maior que 0.1'),
+      imageMaxSize: number()
+        .required('Campo obrigatório.')
+        .min(10, 'Deve ser maior que 10'),
+      renderQuantity: number()
+        .required('Campo obrigatório.')
+        .min(1, 'Deve ser maior que 1'),
+    }),
   });
   // eslint-disable-next-line no-empty-pattern, no-unused-vars
   const {
@@ -74,14 +95,18 @@ function HomePage({ className }: HomePageProps) {
     loadingToastRef.current = toast.loading('Convertendo a imagem...');
 
     try {
-      const { algorithm, colorChangeDelay, moveDelay } = values;
-      const matrix = await handleConvertImageToMatrix(formValues.files[0]);
+      const { algorithm, colorChangeDelay, moveDelay, renderQuantity } = values;
+      const matrix = await handleConvertImageToMatrix(
+        formValues.files[0],
+        formValues.imageMaxSize
+      );
       await delay(1000);
       getMatrix({
         matrix,
         algorithm,
         timeChange: colorChangeDelay,
         timeMove: moveDelay,
+        renderQuantity,
       });
       toast.update(loadingToastRef.current, {
         render: 'Imagem convertida com sucesso!',
@@ -90,7 +115,11 @@ function HomePage({ className }: HomePageProps) {
         autoClose: 5000,
         closeButton: true,
       });
-      navigate('/render');
+      if (formValues.algorithm.length > 1 || formValues.renderQuantity > 1) {
+        navigate('/multi-render');
+      } else {
+        navigate('/render');
+      }
     } catch (error) {
       toast.update(loadingToastRef.current, {
         render: 'Falha ao converter imagem!',
@@ -102,10 +131,10 @@ function HomePage({ className }: HomePageProps) {
     }
   };
 
-  const handleConvertImageToMatrix = async (image: Blob) => {
+  const handleConvertImageToMatrix = async (image: Blob, maxSize: number) => {
     const imageReader = new FileReader();
     const matrix: number[][] = [];
-    imageReader.readAsDataURL((await resizeFile(image)) as Blob);
+    imageReader.readAsDataURL((await resizeFile(image, maxSize)) as Blob);
     imageReader.onload = () => {
       const img = new Image();
       img.src = imageReader.result?.toString() ?? '';
@@ -335,31 +364,77 @@ function HomePage({ className }: HomePageProps) {
               files={values.files}
             />
           </Row>
-          <Row className="mt-3 justify-content-between">
-            <Row className="col-auto">
+          <Row className="mt-3">
+            <Col md={6}>
               <InitialScale delay={0.2}>
                 <Form.Group>
                   <Form.Label>Algoritmo</Form.Label>
-                  <Form.Select
-                    value={values.algorithm}
+                  <Select
+                    placeholder="Selecione"
+                    isMulti
                     name="algorithm"
-                    onChange={handleChange}
-                    aria-label="Algoritmo"
-                  >
-                    <>
-                      <option>Selecione o algoritmo</option>
-                      {ALGORITHM.map((a) => (
-                        <option key={a.label} value={a.value}>
-                          {a.label}
-                        </option>
-                      ))}
-                    </>
-                  </Form.Select>
+                    options={ALGORITHM}
+                    value={
+                      values.algorithm.map((value) => {
+                        const find = ALGORITHM.find(
+                          (algorithm) => algorithm.value === value
+                        );
+                        return find;
+                      }) as unknown as Options
+                    }
+                    onChange={(options) => {
+                      setFieldValue(
+                        'algorithm',
+                        options.map((option) => option.value)
+                      );
+                    }}
+                  />
+                  {touched.algorithm && errors.algorithm && (
+                    <Form.Text className="error">{errors.algorithm}</Form.Text>
+                  )}
                 </Form.Group>
               </InitialScale>
-            </Row>
-            <Row className="col-auto">
+            </Col>
+            <Col>
               <InitialScale delay={0.2}>
+                <Form.Group>
+                  <Form.Label>Número de execuções</Form.Label>
+                  <Form.Control
+                    className="d-flex"
+                    type="number"
+                    name="renderQuantity"
+                    onChange={handleChange}
+                    value={values.renderQuantity}
+                  />
+                  {touched.renderQuantity && errors.renderQuantity && (
+                    <Form.Text className="error">
+                      {errors.renderQuantity}
+                    </Form.Text>
+                  )}
+                </Form.Group>
+              </InitialScale>
+            </Col>
+            <Col>
+              <InitialScale delay={0.3}>
+                <Form.Group>
+                  <Form.Label>Tamanho max imagem</Form.Label>
+                  <Form.Control
+                    className="d-flex"
+                    type="number"
+                    name="imageMaxSize"
+                    onChange={handleChange}
+                    value={values.imageMaxSize}
+                  />
+                  {touched.imageMaxSize && errors.imageMaxSize && (
+                    <Form.Text className="error">
+                      {errors.imageMaxSize}
+                    </Form.Text>
+                  )}
+                </Form.Group>
+              </InitialScale>
+            </Col>
+            <Col>
+              <InitialScale delay={0.4}>
                 <Form.Group>
                   <Form.Label>Tempo de troca da cor</Form.Label>
                   <Form.Control
@@ -376,9 +451,9 @@ function HomePage({ className }: HomePageProps) {
                   )}
                 </Form.Group>
               </InitialScale>
-            </Row>
-            <Row className="col-auto">
-              <InitialScale delay={0.2}>
+            </Col>
+            <Col>
+              <InitialScale delay={0.5}>
                 <Form.Group>
                   <Form.Label>Tempo de movimento</Form.Label>
                   <Form.Control
@@ -388,17 +463,20 @@ function HomePage({ className }: HomePageProps) {
                     onChange={handleChange}
                     value={values.moveDelay}
                   />
+                  {touched.moveDelay && errors.moveDelay && (
+                    <Form.Text className="error">{errors.moveDelay}</Form.Text>
+                  )}
                 </Form.Group>
               </InitialScale>
-            </Row>
+            </Col>
           </Row>
           <Row className="mt-5 pt-3 justify-content-end border-top">
-            <InitialScale delay={0.3}>
+            <InitialScale delay={0.5}>
               <Button variant="danger" onClick={handleCloseModal}>
                 Cancelar
               </Button>
             </InitialScale>
-            <InitialScale delay={0.3}>
+            <InitialScale delay={0.5}>
               <Button type="submit">Iniciar Simulação</Button>
             </InitialScale>
           </Row>

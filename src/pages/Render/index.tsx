@@ -8,11 +8,11 @@ import {
   useMatrixData,
 } from '../../store/hooks/renderHooks';
 import Loading from '../../shared/components/Loading';
-import Render from '../../shared/animations/Render';
 import { formatRemainingTime, saveJSONInFile } from '../../utils';
 
 function RenderPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const [render, setRender] = useState(0);
   const image = useImage();
   const matrixData = useMatrixData();
   const getImage = useGetImage();
@@ -43,11 +43,11 @@ function RenderPage() {
 
   useEffect(() => {
     if (image && image.matrix && !isLoading) {
-      renderImageFromMatrix(image.matrix);
+      renderImageFromMatrix(image.matrix, image.matrixOrder);
     }
-  }, [image, canvasRef.current, isLoading]);
+  }, [image, canvasRef.current, isLoading, render]);
 
-  function renderImageFromMatrix(matrix: number[][]) {
+  function renderImageFromMatrix(matrix: number[][], renderMatrix: number[][]) {
     const rows = matrix.length;
     const cols = matrix[0].length;
 
@@ -65,20 +65,38 @@ function RenderPage() {
       // eslint-disable-next-line no-plusplus
       for (let col = 0; col < cols; col++) {
         const value = matrix[row][col];
+        const position = renderMatrix[row][col];
 
-        // eslint-disable-next-line no-bitwise
-        const r = (value >> 16) & 0xff;
-        // eslint-disable-next-line no-bitwise
-        const g = (value >> 8) & 0xff;
-        // eslint-disable-next-line no-bitwise
-        const b = value & 0xff;
-        // eslint-disable-next-line no-bitwise
-        const a = (value >> 24) & 0xff;
-        if (ctx) {
-          ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${a / 255})`;
-          ctx.fillRect(col, row, 1, 1);
+        if (position > render) {
+          const r = 0;
+          // eslint-disable-next-line no-bitwise
+          const g = 0;
+          // eslint-disable-next-line no-bitwise
+          const b = 0;
+          // eslint-disable-next-line no-bitwise
+          const a = 0;
+          if (ctx) {
+            ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${a / 255})`;
+            ctx.fillRect(col, row, 1, 1);
+          }
+        } else {
+          // eslint-disable-next-line no-bitwise
+          const r = (value >> 16) & 0xff;
+          // eslint-disable-next-line no-bitwise
+          const g = (value >> 8) & 0xff;
+          // eslint-disable-next-line no-bitwise
+          const b = value & 0xff;
+          // eslint-disable-next-line no-bitwise
+          const a = (value >> 24) & 0xff;
+          if (ctx) {
+            ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${a / 255})`;
+            ctx.fillRect(col, row, 1, 1);
+          }
         }
       }
+    }
+    if (render <= matrix[0].length * matrix.length) {
+      setRender((n) => n + 1);
     }
   }
 
@@ -91,6 +109,16 @@ function RenderPage() {
     if (image) {
       saveJSONInFile(image, 'Resultados');
       toast.success('Download dos resultados realizado com sucesso!');
+    }
+  };
+
+  const handleResetRender = () => {
+    setRender(0);
+  };
+
+  const handleSkipRender = () => {
+    if (image) {
+      setRender(image.matrix.length * image.matrix[0].length);
     }
   };
 
@@ -109,9 +137,7 @@ function RenderPage() {
         overflow: 'hidden',
       }}
     >
-      <Render>
-        <canvas ref={canvasRef} />
-      </Render>
+      <canvas ref={canvasRef} />
       <Row
         className="d-flex align-items-center justify-content-around"
         style={{
@@ -130,15 +156,19 @@ function RenderPage() {
         {image && (
           <>
             <Col className="col-auto">
-              <Button variant="primary" onClick={handleSaveSimulation}>
+              <Button variant="success" onClick={handleSaveSimulation}>
                 Salvar
               </Button>
             </Col>
-            <Col className="col-auto" style={{ color: 'white' }}>
-              Tempo de movimento: {image?.timeMove}
+            <Col className="col-auto">
+              <Button variant="secondary" onClick={handleResetRender}>
+                Reiniciar
+              </Button>
             </Col>
-            <Col className="col-auto" style={{ color: 'white' }}>
-              tempo troca da cor: {image?.timeChange}
+            <Col className="col-auto">
+              <Button variant="secondary" onClick={handleSkipRender}>
+                Pular
+              </Button>
             </Col>
             <Col className="d-flex mr-3 justify-content-end">
               <ProgressBar

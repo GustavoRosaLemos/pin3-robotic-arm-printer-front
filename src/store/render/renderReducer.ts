@@ -4,14 +4,19 @@ import * as renderActions from './renderAction';
 export interface State {
   matrixData?: MatrixData;
   image?: ImageData;
+  multipleImage?: ImageData[];
 }
 
 const INITIAL_STATE: State = {
   matrixData: undefined,
   image: undefined,
+  multipleImage: undefined,
 };
 
-export type Actions = renderActions.GetMatrixData | renderActions.GetImage;
+export type Actions =
+  | renderActions.GetMatrixData
+  | renderActions.GetImage
+  | renderActions.GetMultipleImage;
 
 // eslint-disable-next-line default-param-last
 export const renderReducer = (state = INITIAL_STATE, action: Actions) => {
@@ -28,6 +33,13 @@ export const renderReducer = (state = INITIAL_STATE, action: Actions) => {
       return {
         ...state,
         image,
+      };
+    }
+    case renderActions.GET_MULTIPLE_IMAGE: {
+      const { multipleImage } = action.payload;
+      return {
+        ...state,
+        multipleImage,
       };
     }
     default:
